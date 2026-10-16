@@ -1,0 +1,14 @@
+{
+  "name": "beta-sports-mvp",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "pnpm --filter @beta/web dev",
+    "build": "pnpm --filter @beta/web build",
+    "lint": "pnpm --filter @beta/web lint",
+    "typecheck": "pnpm --filter @beta/web typecheck",
+    "test": "pnpm --filter @beta/web test",
+    "test:db": "pnpm --filter @beta/web test:db"
+  }
+}
