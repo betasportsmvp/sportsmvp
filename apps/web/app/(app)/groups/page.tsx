@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { randomUUID } from "node:crypto";
+import { redirect } from "next/navigation";
 import { listMyGroups } from "@/lib/groups";
 import { getUser } from "@/lib/supabase/server";
 import { CreateGroupForm } from "./create-group-form";
 
 export const metadata: Metadata = { title: "Your groups" };
 
-export default async function GroupsPage() {
+export default async function GroupsPage({ searchParams }: PageProps<"/groups">) {
   const user = (await getUser())!;
   const groups = await listMyGroups(user.id);
+  // With a single group, open its Today screen straight away so check-in is one tap.
+  if (groups.length === 1 && !(await searchParams).all) redirect(`/groups/${groups[0].id}`);
   const timezones = Intl.supportedValuesOf("timeZone");
 
   return (
