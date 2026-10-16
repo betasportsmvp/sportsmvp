@@ -65,6 +65,8 @@ To try real Google sign-in locally, follow the comment above `[auth.external.goo
 
 ## Hosted Supabase setup (staging / production)
 
+New to Supabase, Google Cloud or Vercel? Follow the click-by-click [setup guide](docs/setup-guide.md) instead.
+
 Use separate Supabase projects for staging and production.
 
 1. Create the project, then link and push the schema:
