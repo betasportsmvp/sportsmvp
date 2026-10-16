@@ -35,7 +35,7 @@ export async function createInvite(_prev: FormState, formData: FormData): Promis
   });
   if (error) return { error: friendlyError(error) };
   const invite = (data as { token: string }[])[0];
-  revalidatePath(`/groups/${groupId}`);
+  revalidatePath(`/groups/${groupId}`, "layout");
   return { inviteUrl: `${await siteOrigin()}/join/${invite.token}` };
 }
 
@@ -43,7 +43,7 @@ export async function revokeInvite(formData: FormData) {
   const groupId = String(formData.get("group_id"));
   const supabase = await createClient();
   await supabase.rpc("revoke_invite", { p_invite_id: String(formData.get("invite_id")) });
-  revalidatePath(`/groups/${groupId}`);
+  revalidatePath(`/groups/${groupId}`, "layout");
 }
 
 export async function setMemberRole(formData: FormData) {
@@ -54,7 +54,7 @@ export async function setMemberRole(formData: FormData) {
     p_user_id: String(formData.get("user_id")),
     p_role: String(formData.get("role")),
   });
-  revalidatePath(`/groups/${groupId}`);
+  revalidatePath(`/groups/${groupId}`, "layout");
 }
 
 export async function removeMember(formData: FormData) {
@@ -64,7 +64,7 @@ export async function removeMember(formData: FormData) {
     p_group_id: groupId,
     p_user_id: String(formData.get("user_id")),
   });
-  revalidatePath(`/groups/${groupId}`);
+  revalidatePath(`/groups/${groupId}`, "layout");
 }
 
 export async function joinGroup(_prev: FormState, formData: FormData): Promise<FormState> {

@@ -9,6 +9,9 @@ const messages: Record<string, string> = {
   cannot_change_owner: "The owner's role can't be changed.",
   cannot_remove_owner: "The owner can't be removed from the group.",
   member_not_found: "That person isn't an active member of this group.",
+  invalid_attendance: "Choose a date and whether the person played.",
+  future_date: "Attendance can't be recorded for a future date.",
+  outside_backdate_window: "That date is too far back for you to change. Ask a group admin to correct it.",
 };
 
 /** Turns a database command error into safe, friendly copy. Unknown errors stay generic. */

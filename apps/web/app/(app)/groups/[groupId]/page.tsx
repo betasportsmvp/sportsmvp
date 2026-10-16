@@ -1,121 +1,78 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { Role } from "@/lib/groups";
-import { createClient, getUser } from "@/lib/supabase/server";
-import { removeMember, revokeInvite, setMemberRole } from "../actions";
-import { InviteForm } from "./invite-form";
+import { AttendanceRoster, recordedNote } from "@/components/attendance-roster";
+import { AttendanceToggle } from "@/components/attendance-toggle";
+import { loadAttendance } from "@/lib/attendance";
+import { statusLabel, statusMark } from "@/lib/attendance-status";
+import { formatDate, localDate } from "@/lib/dates";
+import { getGroupContext } from "@/lib/groups";
+import { getUser } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Group" };
+export const metadata: Metadata = { title: "Today" };
 
-type Member = {
-  user_id: string;
-  role: Role;
-  joined_at: string;
-  profiles: { display_name: string; email: string } | null;
-};
-
-const roleOrder: Record<Role, number> = { owner: 0, admin: 1, member: 2 };
-
-export default async function GroupPage({ params }: PageProps<"/groups/[groupId]">) {
+export default async function TodayPage({ params }: PageProps<"/groups/[groupId]">) {
   const { groupId } = await params;
   const user = (await getUser())!;
-  const supabase = await createClient();
+  const ctx = await getGroupContext(groupId, user.id);
+  if (!ctx) notFound();
+  const { group, members, isAdmin } = ctx;
 
-  const { data: group } = await supabase
-    .from("groups")
-    .select("id, name, sport, timezone, currency, backdate_days")
-    .eq("id", groupId)
-    .maybeSingle();
-  if (!group) notFound();
+  const today = localDate(group.timezone);
+  let records;
+  try {
+    records = await loadAttendance(groupId, today, today);
+  } catch {
+    return <p className="alert" role="alert">We couldn&apos;t load today&apos;s attendance. Please refresh the page.</p>;
+  }
 
-  const { data: memberRows } = await supabase
-    .from("memberships")
-    .select("user_id, role, joined_at, profiles(display_name, email)")
-    .eq("group_id", groupId)
-    .is("left_at", null);
-  const members = ((memberRows ?? []) as unknown as Member[]).sort(
-    (a, b) => roleOrder[a.role] - roleOrder[b.role] || a.joined_at.localeCompare(b.joined_at),
-  );
-
-  const myRole = members.find((m) => m.user_id === user.id)?.role;
-  const canManage = myRole === "owner" || myRole === "admin";
-
-  const { data: invites } = canManage
-    ? await supabase
-        .from("group_invites")
-        .select("id, expires_at, use_count, max_uses, revoked_at")
-        .eq("group_id", groupId)
-        .is("revoked_at", null)
-        .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false })
-    : { data: [] };
+  const mine = records.find((r) => r.user_id === user.id);
+  const myStatus = mine?.status ?? "none";
+  const names = new Map(members.map((m) => [m.user_id, m.name]));
+  const note = recordedNote(mine, names, group.timezone, user.id);
+  const active = records.filter((r) => names.has(r.user_id));
+  const playing = active.filter((r) => r.status === "present").length;
+  const notPlaying = active.filter((r) => r.status === "absent").length;
+  const unrecorded = members.length - playing - notPlaying;
 
   return (
-    <main>
-      <p><Link href="/groups">← All groups</Link></p>
-      <h1>{group.name}</h1>
-      <p className="muted">
-        {group.sport} · {group.timezone} · {group.currency} · members can backdate {group.backdate_days} days
+    <>
+      <p className="muted">{formatDate(today, { weekday: "long", day: "numeric", month: "long" })}</p>
+
+      <section className="card stack" aria-labelledby="my-status">
+        <h2 id="my-status" className="flush">Are you playing today?</h2>
+        <p className={`status-pill large ${myStatus}`}>
+          <span aria-hidden="true">{statusMark[myStatus]}</span> {statusLabel[myStatus]}
+        </p>
+        {note && <p className="muted small">{note}</p>}
+        <AttendanceToggle groupId={groupId} date={today} userId={user.id} status={mine?.status ?? null} subject="your" />
+      </section>
+
+      <p className="summary" aria-label="Today's summary">
+        <strong>{playing}</strong> playing · <strong>{notPlaying}</strong> not playing · <strong>{unrecorded}</strong> not recorded
       </p>
 
-      <h2>Members ({members.length})</h2>
-      <ul className="list card">
-        {members.map((m) => (
-          <li key={m.user_id} className="row">
-            <span>
-              {m.profiles?.display_name || m.profiles?.email}
-              {m.user_id === user.id && <span className="muted"> (you)</span>}
-            </span>
-            <span className="row">
-              <span className="badge">{m.role}</span>
-              {myRole === "owner" && m.role !== "owner" && (
-                <form action={setMemberRole}>
-                  <input type="hidden" name="group_id" value={groupId} />
-                  <input type="hidden" name="user_id" value={m.user_id} />
-                  <input type="hidden" name="role" value={m.role === "admin" ? "member" : "admin"} />
-                  <button type="submit" className="quiet">{m.role === "admin" ? "Make member" : "Make admin"}</button>
-                </form>
-              )}
-              {canManage && m.role !== "owner" && (myRole === "owner" || m.role === "member") && (
-                <form action={removeMember}>
-                  <input type="hidden" name="group_id" value={groupId} />
-                  <input type="hidden" name="user_id" value={m.user_id} />
-                  <button type="submit" className="quiet" aria-label={`Remove ${m.profiles?.display_name ?? "member"} from group`}>
-                    Remove from group
-                  </button>
-                </form>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {canManage && (
-        <>
-          <h2>Invite people</h2>
-          <div className="card stack">
-            <InviteForm groupId={groupId} />
-            {invites && invites.length > 0 && (
-              <ul className="list">
-                {invites.map((inv) => (
-                  <li key={inv.id} className="row">
-                    <span className="muted">
-                      Active link · expires {new Date(inv.expires_at).toLocaleDateString()} · used {inv.use_count}
-                      {inv.max_uses ? ` of ${inv.max_uses}` : ""}
-                    </span>
-                    <form action={revokeInvite}>
-                      <input type="hidden" name="group_id" value={groupId} />
-                      <input type="hidden" name="invite_id" value={inv.id} />
-                      <button type="submit" className="quiet">Turn off link</button>
-                    </form>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </>
+      <h2>{isAdmin ? "Mark the group" : "Who's playing"}</h2>
+      {isAdmin ? (
+        <AttendanceRoster
+          groupId={groupId}
+          date={today}
+          members={members}
+          records={records}
+          timeZone={group.timezone}
+          viewerId={user.id}
+          editable
+        />
+      ) : playing === 0 ? (
+        <p className="muted">Nobody has marked themselves as playing yet.</p>
+      ) : (
+        <ul className="list card">
+          {records
+            .filter((r) => r.status === "present")
+            .map((r) => (
+              <li key={r.user_id}>{names.get(r.user_id) ?? "Member"}</li>
+            ))}
+        </ul>
       )}
-    </main>
+    </>
   );
 }

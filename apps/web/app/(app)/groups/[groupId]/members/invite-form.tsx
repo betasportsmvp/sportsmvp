@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { SubmitButton } from "@/components/submit-button";
-import { createInvite } from "../actions";
+import { createInvite } from "../../actions";
 
 export function InviteForm({ groupId }: { groupId: string }) {
   const [state, action] = useActionState(createInvite, undefined);
