@@ -111,7 +111,7 @@ h2.flush { margin: 0; }
 
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  display: grid; grid-template-columns: repeat(4, 1fr);
   background: var(--surface); border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -157,3 +157,15 @@ table.calendar td { padding: 0; }
 .calendar .day.selected { outline: 3px solid var(--brand); outline-offset: 0; }
 .calendar .day.future { color: var(--muted); background: transparent; border-style: dashed; }
 ol.history { list-style: none; padding-left: 16px; padding-right: 16px; }
+
+/* Balls */
+.actions { justify-content: flex-start; margin: 12px 0; }
+.stock { font-size: 1.1rem; }
+.badge.warn { border-color: var(--danger); color: var(--danger); }
+.delta { font-weight: 700; }
+.delta.plus { color: var(--brand); }
+fieldset.plain { border: 0; padding: 0; margin: 0; }
+fieldset.plain legend { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+label.inline { display: flex; align-items: center; gap: 8px; font-weight: 400; min-height: 44px; }
+label.inline input { min-height: 0; width: 20px; height: 20px; }
+input[type="file"] { padding: 8px; }

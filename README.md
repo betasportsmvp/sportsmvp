@@ -7,8 +7,8 @@ The product spec and the phased build prompts live in [`docs/build-pack/`](docs/
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 0 | Foundation: PWA shell, Google sign-in, groups, invites, schema, RLS | Done |
-| 1 | Attendance and calendar | In progress |
-| 2 | Inventory | Not started |
+| 1 | Attendance and calendar | Done |
+| 2 | Inventory | In progress |
 | 3 | Consumption and allocation | Not started |
 | 4 | Settlement | Not started |
 | 5 | Billing readiness and motivation | Not started |
@@ -29,7 +29,7 @@ supabase/
   tests/supabase-shim.sql  test-only stand-in for Supabase's auth schema and roles
 ```
 
-Supabase provides Google auth, Postgres with Row Level Security, and (later) private storage. The browser only ever uses the **publishable** key. All writes beyond editing your own display name go through `SECURITY DEFINER` database commands (`create_group`, `create_invite`, `join_group_from_invite`, `set_member_role`, `remove_member`, `upsert_attendance`, ...) that check membership and role, accept an idempotency key where it matters, and write an `audit_events` row in the same transaction.
+Supabase provides Google auth, Postgres with Row Level Security, and private storage (the `receipts` bucket, readable only by members of the group named in the file path). The browser only ever uses the **publishable** key. All writes beyond editing your own display name go through `SECURITY DEFINER` database commands (`create_group`, `create_invite`, `join_group_from_invite`, `set_member_role`, `remove_member`, `upsert_attendance`, `record_purchase`, `adjust_inventory`, ...) that check membership and role, accept an idempotency key where it matters, and write an `audit_events` row in the same transaction.
 
 ## Prerequisites
 
@@ -128,6 +128,6 @@ pnpm build
 
 `pnpm test:db` creates a throwaway database for each run, applies `supabase/tests/supabase-shim.sql`, every migration and the seed, then exercises the rules as real `authenticated`/`anon` requests would. By default it connects to `postgresql://postgres:postgres@localhost:5432/postgres`; point it elsewhere with `TEST_DATABASE_ADMIN_URL` (for local Supabase: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`).
 
-The Phase 1 attendance rules (one session per local date, backdate window, admin corrections, timezone boundaries, audit) are covered in `attendance.test.ts`. The Phase 0 acceptance case is covered there too: user A signs in and creates a group, user B joins through a valid invite, and user C cannot read either user's group data.
+The Phase 1 attendance rules are covered in `attendance.test.ts`, and the Phase 2 stock ledger, purchases, corrections and receipt access in `inventory.test.ts`. The Phase 0 acceptance case is in `authorization.test.ts`: user A signs in and creates a group, user B joins through a valid invite, and user C cannot read either user's group data.
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and build; the database tests on Postgres 16; and the migrations plus seed on Supabase's own Postgres image with `supabase db lint`.

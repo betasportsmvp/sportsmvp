@@ -11,6 +11,14 @@ const messages: Record<string, string> = {
   member_not_found: "That person isn't an active member of this group.",
   invalid_attendance: "Choose a date and whether the person played.",
   future_date: "Attendance can't be recorded for a future date.",
+  item_not_found: "That item isn't in this group.",
+  item_exists: "This group already has an item with that name.",
+  invalid_purchase: "Enter a quantity and a total price above zero.",
+  invalid_receipt: "That receipt couldn't be attached. Try uploading it again.",
+  reason_required: "Add a short reason so the group can see why.",
+  invalid_adjustment: "Enter how many to add or remove.",
+  insufficient_stock: "There isn't that much in stock to remove.",
+  purchase_already_used: "Some of this purchase has already been used or corrected, so it can't be reversed. Correct the stock instead.",
   outside_backdate_window: "That date is too far back for you to change. Ask a group admin to correct it.",
 };
 

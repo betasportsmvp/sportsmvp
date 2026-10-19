@@ -9,6 +9,7 @@ export function GroupTabs({ groupId }: { groupId: string }) {
   const tabs = [
     { href: base, label: "Today" },
     { href: `${base}/calendar`, label: "Calendar" },
+    { href: `${base}/balls`, label: "Balls" },
     { href: `${base}/members`, label: "Group" },
   ];
   return (
