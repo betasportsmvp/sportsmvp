@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AttendanceRoster, recordedNote } from "@/components/attendance-roster";
 import { AttendanceToggle } from "@/components/attendance-toggle";
@@ -6,6 +7,8 @@ import { loadAttendance } from "@/lib/attendance";
 import { statusLabel, statusMark } from "@/lib/attendance-status";
 import { formatDate, localDate } from "@/lib/dates";
 import { getGroupContext } from "@/lib/groups";
+import { loadItems } from "@/lib/inventory";
+import { quantityLabel } from "@/lib/units";
 import { getUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Today" };
@@ -25,6 +28,7 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
     return <p className="alert" role="alert">We couldn&apos;t load today&apos;s attendance. Please refresh the page.</p>;
   }
 
+  const lowStock = isAdmin ? (await loadItems(groupId).catch(() => [])).filter((i) => i.low) : [];
   const mine = records.find((r) => r.user_id === user.id);
   const myStatus = mine?.status ?? "none";
   const names = new Map(members.map((m) => [m.user_id, m.name]));
@@ -46,6 +50,13 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
         {note && <p className="muted small">{note}</p>}
         <AttendanceToggle groupId={groupId} date={today} userId={user.id} status={mine?.status ?? null} subject="your" />
       </section>
+
+      {lowStock.map((i) => (
+        <p key={i.id} className="notice">
+          <span aria-hidden="true">⚠</span> {i.name} running low: {quantityLabel(i.on_hand, i.unit)} left.{" "}
+          <Link href={`/groups/${groupId}/balls/purchase`}>Add purchase</Link>
+        </p>
+      ))}
 
       <p className="summary" aria-label="Today's summary">
         <strong>{playing}</strong> playing · <strong>{notPlaying}</strong> not playing · <strong>{unrecorded}</strong> not recorded
