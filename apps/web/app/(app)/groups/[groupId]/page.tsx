@@ -5,9 +5,11 @@ import { AttendanceRoster, recordedNote } from "@/components/attendance-roster";
 import { AttendanceToggle } from "@/components/attendance-toggle";
 import { loadAttendance } from "@/lib/attendance";
 import { statusLabel, statusMark } from "@/lib/attendance-status";
+import { loadMemberCosts } from "@/lib/costs";
 import { formatDate, localDate } from "@/lib/dates";
 import { getGroupContext } from "@/lib/groups";
 import { loadItems } from "@/lib/inventory";
+import { formatMoney } from "@/lib/money";
 import { quantityLabel } from "@/lib/units";
 import { getUser } from "@/lib/supabase/server";
 
@@ -28,7 +30,10 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
     return <p className="alert" role="alert">We couldn&apos;t load today&apos;s attendance. Please refresh the page.</p>;
   }
 
-  const lowStock = isAdmin ? (await loadItems(groupId).catch(() => [])).filter((i) => i.low) : [];
+  const [lowStock, costs] = await Promise.all([
+    isAdmin ? loadItems(groupId).then((items) => items.filter((i) => i.low)).catch(() => []) : [],
+    loadMemberCosts(groupId, user.id).catch(() => null),
+  ]);
   const mine = records.find((r) => r.user_id === user.id);
   const myStatus = mine?.status ?? "none";
   const names = new Map(members.map((m) => [m.user_id, m.name]));
@@ -60,6 +65,18 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
 
       <p className="summary" aria-label="Today's summary">
         <strong>{playing}</strong> playing · <strong>{notPlaying}</strong> not playing · <strong>{unrecorded}</strong> not recorded
+      </p>
+
+      <p className="row actions">
+        {costs && (
+          <span>
+            Your ball costs so far: <strong>{formatMoney(costs.total, group.currency)}</strong>{" "}
+            <Link href={`/groups/${groupId}/costs`}>Why this cost?</Link>
+          </span>
+        )}
+        {isAdmin && playing > 0 && (
+          <Link href={`/groups/${groupId}/balls/use?date=${today}`} className="button secondary">Record ball use</Link>
+        )}
       </p>
 
       <h2>{isAdmin ? "Mark the group" : "Who's playing"}</h2>

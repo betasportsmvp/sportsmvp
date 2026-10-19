@@ -118,3 +118,49 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
   revalidatePath(`/groups/${groupId}`, "layout");
   return { message: itemId ? "Saved." : "Item added." };
 }
+
+export async function recordConsumption(_prev: FormState, formData: FormData): Promise<FormState> {
+  const groupId = String(formData.get("group_id") ?? "");
+  const quantity = int(formData.get("quantity"));
+  const date = formData.get("local_date");
+  if (!quantity || quantity < 1) return { error: "Enter how many were used." };
+  if (!isIsoDate(date)) return { error: "Choose the day they were used." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("record_consumption_and_allocate", {
+    p_group_id: groupId,
+    p_local_date: date,
+    p_item_id: String(formData.get("item_id") ?? ""),
+    p_quantity: quantity,
+    p_note: String(formData.get("note") ?? ""),
+    p_idempotency_key: String(formData.get("idempotency_key") ?? ""),
+  });
+  if (error) return { error: friendlyError(error) };
+
+  revalidatePath(`/groups/${groupId}`, "layout");
+  redirect(`/groups/${groupId}/calendar?date=${date}#balls-used`);
+}
+
+export async function reverseConsumption(_prev: FormState, formData: FormData): Promise<FormState> {
+  const groupId = String(formData.get("group_id") ?? "");
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reverse_consumption", {
+    p_consumption_id: String(formData.get("consumption_id") ?? ""),
+    p_reason: String(formData.get("reason") ?? ""),
+  });
+  if (error) return { error: friendlyError(error) };
+  revalidatePath(`/groups/${groupId}`, "layout");
+  return { message: "Ball use reversed. The balls are back in stock and nobody is charged for them." };
+}
+
+export async function reallocateConsumption(_prev: FormState, formData: FormData): Promise<FormState> {
+  const groupId = String(formData.get("group_id") ?? "");
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reallocate_consumption", {
+    p_consumption_id: String(formData.get("consumption_id") ?? ""),
+    p_reason: String(formData.get("reason") ?? ""),
+  });
+  if (error) return { error: friendlyError(error) };
+  revalidatePath(`/groups/${groupId}`, "layout");
+  return { message: "Cost re-split among the people playing now." };
+}

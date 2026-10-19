@@ -19,6 +19,9 @@ const messages: Record<string, string> = {
   invalid_adjustment: "Enter how many to add or remove.",
   insufficient_stock: "There isn't that much in stock to remove.",
   purchase_already_used: "Some of this purchase has already been used or corrected, so it can't be reversed. Correct the stock instead.",
+  invalid_consumption: "Choose the day and how many were used.",
+  no_present_attendees: "Nobody is marked as playing on that day, so there's no one to share the cost. Mark who played first.",
+  consumption_reversed: "This ball use has already been reversed.",
   outside_backdate_window: "That date is too far back for you to change. Ask a group admin to correct it.",
 };
 
