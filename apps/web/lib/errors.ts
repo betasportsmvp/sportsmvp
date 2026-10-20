@@ -22,6 +22,8 @@ const messages: Record<string, string> = {
   invalid_consumption: "Choose the day and how many were used.",
   no_present_attendees: "Nobody is marked as playing on that day, so there's no one to share the cost. Mark who played first.",
   consumption_reversed: "This ball use has already been reversed.",
+  invalid_payment: "Choose who paid, who received it, and an amount above zero.",
+  confirmation_required: "Tick the box to confirm this payment really happened.",
   outside_backdate_window: "That date is too far back for you to change. Ask a group admin to correct it.",
 };
 
