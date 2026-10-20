@@ -3,7 +3,15 @@
 import { useActionState } from "react";
 import { SubmitButton } from "@/components/submit-button";
 import { units, type Unit } from "@/lib/units";
-import { adjustInventory, recordPurchase, reversePurchase, saveItem } from "./actions";
+import {
+  adjustInventory,
+  reallocateConsumption,
+  recordConsumption,
+  recordPurchase,
+  reverseConsumption,
+  reversePurchase,
+  saveItem,
+} from "./actions";
 
 type ItemOption = { id: string; name: string; unit: Unit };
 type MemberOption = { user_id: string; name: string };
@@ -156,6 +164,79 @@ export function ItemForm({ groupId, item }: { groupId: string; item?: ItemOption
       </label>
       <Feedback state={state} />
       <SubmitButton className="secondary" pendingText="Saving…">{item ? "Save" : "Add item"}</SubmitButton>
+    </form>
+  );
+}
+
+export function UseForm(props: {
+  groupId: string;
+  items: (ItemOption & { on_hand: number })[];
+  date: string;
+  today: string;
+  idempotencyKey: string;
+}) {
+  const [state, action] = useActionState(recordConsumption, undefined);
+  return (
+    <form action={action} className="card stack">
+      <input type="hidden" name="group_id" value={props.groupId} />
+      <input type="hidden" name="idempotency_key" value={props.idempotencyKey} />
+      <label>
+        Day played
+        <input name="local_date" type="date" max={props.today} defaultValue={props.date} required />
+      </label>
+      <label>
+        Item
+        <select name="item_id" required>
+          {props.items.map((i) => (
+            <option key={i.id} value={i.id}>{i.name} ({i.on_hand} {i.unit}s on hand)</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        How many were used
+        <input name="quantity" type="number" inputMode="numeric" min={1} max={100000} step={1} required />
+      </label>
+      <label>
+        Note <span className="muted">(optional)</span>
+        <input name="note" maxLength={500} placeholder="Opened 2 new cans" />
+      </label>
+      <Feedback state={state} />
+      <SubmitButton pendingText="Saving…">Record ball use</SubmitButton>
+    </form>
+  );
+}
+
+export function ReverseConsumptionForm({ groupId, consumptionId }: { groupId: string; consumptionId: string }) {
+  const [state, action] = useActionState(reverseConsumption, undefined);
+  return (
+    <details>
+      <summary className="small">Reverse this ball use</summary>
+      <form action={action} className="stack">
+        <input type="hidden" name="group_id" value={groupId} />
+        <input type="hidden" name="consumption_id" value={consumptionId} />
+        <label>
+          Reason
+          <input name="reason" required maxLength={500} placeholder="Recorded on the wrong day" />
+        </label>
+        <Feedback state={state} />
+        <SubmitButton className="secondary" pendingText="Reversing…">Reverse ball use</SubmitButton>
+      </form>
+    </details>
+  );
+}
+
+export function ReallocateForm({ groupId, consumptionId }: { groupId: string; consumptionId: string }) {
+  const [state, action] = useActionState(reallocateConsumption, undefined);
+  return (
+    <form action={action} className="stack">
+      <input type="hidden" name="group_id" value={groupId} />
+      <input type="hidden" name="consumption_id" value={consumptionId} />
+      <label>
+        Reason
+        <input name="reason" required maxLength={500} defaultValue="Attendance was corrected" />
+      </label>
+      <Feedback state={state} />
+      <SubmitButton pendingText="Re-splitting…">Re-split the cost</SubmitButton>
     </form>
   );
 }

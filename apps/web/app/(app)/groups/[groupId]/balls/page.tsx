@@ -54,6 +54,29 @@ export default async function BallsPage({ params }: PageProps<"/groups/[groupId]
         </>
       );
     }
+    if (e.kind === "consumption" || e.kind === "consumption_reversal") {
+      const day = e.session_date && (
+        <Link href={`/groups/${groupId}/calendar?date=${e.session_date}#balls-used`}>
+          {formatDate(e.session_date, { day: "numeric", month: "short" })}
+        </Link>
+      );
+      return e.kind === "consumption" ? (
+        <>
+          <strong>Used on {day}</strong>
+          <span className="muted">
+            {" "}· recorded by {nameOf(e.recorded_by)}
+            {e.cost_minor !== null && <> · cost {money(e.cost_minor)}</>}
+          </span>
+          {e.reason && <> · {e.reason}</>}
+        </>
+      ) : (
+        <>
+          <strong>Ball use reversed by {nameOf(e.recorded_by)}</strong>
+          <span className="muted"> · from {day}</span>
+          {e.reason && <> · “{e.reason}”</>}
+        </>
+      );
+    }
     return (
       <>
         <strong>Stock corrected by {nameOf(e.recorded_by)}</strong>
@@ -66,6 +89,7 @@ export default async function BallsPage({ params }: PageProps<"/groups/[groupId]
     <>
       <div className="row actions">
         <Link href={`/groups/${groupId}/balls/purchase`} className="button">Add purchase</Link>
+        {isAdmin && <Link href={`/groups/${groupId}/balls/use`} className="button">Record ball use</Link>}
         {isAdmin && <Link href={`/groups/${groupId}/balls/adjust`} className="button secondary">Correct stock</Link>}
       </div>
 
@@ -97,7 +121,7 @@ export default async function BallsPage({ params }: PageProps<"/groups/[groupId]
       )}
 
       <h2>History</h2>
-      <p className="muted small">Purchases add stock. They don&apos;t mean anyone owes money yet; costs are shared later from the balls actually used.</p>
+      <p className="muted small">Purchases add stock. Nobody owes money for a purchase; costs are shared only when balls are recorded as used on a day, between the people who played.</p>
       {ledger.length === 0 ? (
         <p className="muted">Nothing recorded yet. Add the first purchase to start tracking stock.</p>
       ) : (

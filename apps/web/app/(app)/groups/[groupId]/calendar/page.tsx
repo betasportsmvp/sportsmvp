@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AttendanceRoster, recordedNote } from "@/components/attendance-roster";
 import { AttendanceToggle } from "@/components/attendance-toggle";
 import { loadAttendance, loadAttendanceHistory } from "@/lib/attendance";
+import { loadSessionConsumptions } from "@/lib/costs";
 import { statusLabel, statusMark } from "@/lib/attendance-status";
 import {
   addMonths,
@@ -19,7 +20,9 @@ import {
   monthRange,
 } from "@/lib/dates";
 import { getGroupContext } from "@/lib/groups";
+import { loadItems } from "@/lib/inventory";
 import { getUser } from "@/lib/supabase/server";
+import { SessionCosts } from "../session-costs";
 
 export const metadata: Metadata = { title: "Calendar" };
 
@@ -40,12 +43,14 @@ export default async function CalendarPage({ params, searchParams }: PageProps<"
   const href = (m: string, d?: string) =>
     `/groups/${groupId}/calendar?month=${m}${d ? `&date=${d}` : ""}`;
 
-  let mine, dayRecords, history;
+  let mine, dayRecords, history, consumptions, items;
   try {
-    [mine, dayRecords, history] = await Promise.all([
+    [mine, dayRecords, history, consumptions, items] = await Promise.all([
       loadAttendance(groupId, first, last, user.id),
       loadAttendance(groupId, selected, selected),
       loadAttendanceHistory(groupId, selected),
+      loadSessionConsumptions(groupId, selected),
+      loadItems(groupId),
     ]);
   } catch {
     return <p className="alert" role="alert">We couldn&apos;t load the calendar. Please refresh the page.</p>;
@@ -162,6 +167,19 @@ export default async function CalendarPage({ params, searchParams }: PageProps<"
       ) : (
         <p className="muted">Nobody was marked as playing on this day.</p>
       )}
+
+      <SessionCosts
+        groupId={groupId}
+        date={selected}
+        currency={group.currency}
+        timeZone={group.timezone}
+        consumptions={consumptions}
+        presentIds={dayRecords.filter((r) => r.status === "present").map((r) => r.user_id)}
+        items={new Map(items.map((i) => [i.id, i]))}
+        nameOf={nameOf}
+        viewerId={user.id}
+        isAdmin={isAdmin}
+      />
 
       <h2>Changes</h2>
       {history.length === 0 ? (

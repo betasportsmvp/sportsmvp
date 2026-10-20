@@ -8,8 +8,8 @@ The product spec and the phased build prompts live in [`docs/build-pack/`](docs/
 | --- | --- | --- |
 | 0 | Foundation: PWA shell, Google sign-in, groups, invites, schema, RLS | Done |
 | 1 | Attendance and calendar | Done |
-| 2 | Inventory | In progress |
-| 3 | Consumption and allocation | Not started |
+| 2 | Inventory | Done |
+| 3 | Consumption and allocation | In progress |
 | 4 | Settlement | Not started |
 | 5 | Billing readiness and motivation | Not started |
 | 6 | Quality, security and beta release | Not started |

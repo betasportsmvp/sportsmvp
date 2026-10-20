@@ -31,8 +31,12 @@ export type Purchase = {
 export type LedgerEntry = {
   entry_id: string;
   item_id: string;
-  kind: "purchase" | "purchase_reversal" | "adjustment";
+  kind: "purchase" | "purchase_reversal" | "adjustment" | "consumption" | "consumption_reversal";
   quantity: number;
+  /** Cost taken from the lots, for ball use (negative when reversed). */
+  cost_minor: number | null;
+  /** The day balls were used, for ball use and its reversal. */
+  session_date: string | null;
   occurred_on: string;
   created_at: string;
   recorded_by: string;
@@ -64,7 +68,7 @@ export async function loadLedger(groupId: string): Promise<LedgerEntry[]> {
   const [movementsRes, purchasesRes, lotsRes] = await Promise.all([
     supabase
       .from("inventory_movements")
-      .select("entry_id, item_id, kind, quantity, occurred_on, created_at, recorded_by, reason, purchase_id")
+      .select("entry_id, item_id, kind, quantity, cost_minor, occurred_on, created_at, recorded_by, reason, purchase_id, sessions(local_date)")
       .eq("group_id", groupId)
       .order("created_at", { ascending: true }),
     supabase
@@ -89,6 +93,7 @@ export async function loadLedger(groupId: string): Promise<LedgerEntry[]> {
     const existing = entries.get(m.entry_id);
     if (existing) {
       existing.quantity += m.quantity;
+      if (m.cost_minor !== null) existing.cost_minor = (existing.cost_minor ?? 0) + m.cost_minor;
       continue;
     }
     entries.set(m.entry_id, {
@@ -96,6 +101,8 @@ export async function loadLedger(groupId: string): Promise<LedgerEntry[]> {
       item_id: m.item_id,
       kind: m.kind,
       quantity: m.quantity,
+      cost_minor: m.cost_minor,
+      session_date: (m.sessions as unknown as { local_date: string } | null)?.local_date ?? null,
       occurred_on: m.occurred_on,
       created_at: m.created_at,
       recorded_by: m.recorded_by,
