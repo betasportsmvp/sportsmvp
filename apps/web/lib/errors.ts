@@ -24,6 +24,9 @@ const messages: Record<string, string> = {
   consumption_reversed: "This ball use has already been reversed.",
   invalid_payment: "Choose who paid, who received it, and an amount above zero.",
   confirmation_required: "Tick the box to confirm this payment really happened.",
+  member_limit_reached: "This group is full on the Free plan (12 active members). Ask an admin about Group Pro.",
+  invalid_preferences: "Choose a weekly goal from 1 to 7, and at least one day if reminders are on.",
+  invalid_target: "Choose a monthly goal from 1 to 31 sessions.",
   outside_backdate_window: "That date is too far back for you to change. Ask a group admin to correct it.",
 };
 

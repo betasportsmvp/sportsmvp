@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { balanceStanding, defaultLead, leadCashflow } from "@/lib/balance";
 import { formatDate, formatTimestamp, isIsoDate } from "@/lib/dates";
+import { hasEntitlement } from "@/lib/entitlements";
 import { getGroupContext } from "@/lib/groups";
 import { formatMoney } from "@/lib/money";
 import { loadSettlement } from "@/lib/settlement";
@@ -19,8 +20,10 @@ export default async function SettlePage({ params, searchParams }: PageProps<"/g
   if (!ctx) notFound();
   const { group, members, isAdmin } = ctx;
 
-  const from = isIsoDate(query.from) ? query.from : null;
-  const to = isIsoDate(query.to) ? query.to : null;
+  // Date ranges are a Pro feature; all-time balances and every payment stay visible on Free.
+  const periods = await hasEntitlement(groupId, "settlement_periods");
+  const from = periods && isIsoDate(query.from) ? query.from : null;
+  const to = periods && isIsoDate(query.to) ? query.to : null;
 
   let data;
   try {
@@ -70,23 +73,29 @@ export default async function SettlePage({ params, searchParams }: PageProps<"/g
         </p>
       </section>
 
-      <details className="card">
-        <summary>Choose a period</summary>
-        <form method="get" className="stack">
-          <label>
-            From
-            <input type="date" name="from" defaultValue={from ?? ""} />
-          </label>
-          <label>
-            To
-            <input type="date" name="to" defaultValue={to ?? ""} />
-          </label>
-          <div className="row actions">
-            <button type="submit" className="secondary">Show</button>
-            {(from || to) && <Link href={`/groups/${groupId}/settle`}>All time</Link>}
-          </div>
-        </form>
-      </details>
+      {periods ? (
+        <details className="card">
+          <summary>Choose a period</summary>
+          <form method="get" className="stack">
+            <label>
+              From
+              <input type="date" name="from" defaultValue={from ?? ""} />
+            </label>
+            <label>
+              To
+              <input type="date" name="to" defaultValue={to ?? ""} />
+            </label>
+            <div className="row actions">
+              <button type="submit" className="secondary">Show</button>
+              {(from || to) && <Link href={`/groups/${groupId}/settle`}>All time</Link>}
+            </div>
+          </form>
+        </details>
+      ) : (
+        <p className="muted small">
+          Balances for a chosen date range come with <Link href={`/groups/${groupId}/plan`}>Group Pro</Link>.
+        </p>
+      )}
 
       <h2>Suggested payments</h2>
       {plan.length === 0 ? (

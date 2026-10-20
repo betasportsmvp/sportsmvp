@@ -10,7 +10,8 @@ The product spec and the phased build prompts live in [`docs/build-pack/`](docs/
 | 1 | Attendance and calendar | Done |
 | 2 | Inventory | Done |
 | 3 | Consumption and allocation | Done |
-| 4 | Settlement | In progress |
+| 4 | Settlement | Done |
+| 5 | Plan readiness (beta access, no payments) and motivation | In progress |
 | 5 | Billing readiness and motivation | Not started |
 | 6 | Quality, security and beta release | Not started |
 
@@ -129,6 +130,6 @@ pnpm build
 
 `pnpm test:db` creates a throwaway database for each run, applies `supabase/tests/supabase-shim.sql`, every migration and the seed, then exercises the rules as real `authenticated`/`anon` requests would. By default it connects to `postgresql://postgres:postgres@localhost:5432/postgres`; point it elsewhere with `TEST_DATABASE_ADMIN_URL` (for local Supabase: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`).
 
-The Phase 1 attendance rules are covered in `attendance.test.ts`, and the Phase 2 stock ledger, purchases, corrections and receipt access in `inventory.test.ts`. The Phase 0 acceptance case is in `authorization.test.ts`: user A signs in and creates a group, user B joins through a valid invite, and user C cannot read either user's group data.
+The Phase 1 attendance rules are covered in `attendance.test.ts`, and the Phase 2 stock ledger, purchases, corrections and receipt access in `inventory.test.ts`. Phase 5 plans and webhook handling are in `billing.test.ts`, and goals, streaks and privacy in `motivation.test.ts`; see [docs/billing.md](docs/billing.md). The Phase 0 acceptance case is in `authorization.test.ts`: user A signs in and creates a group, user B joins through a valid invite, and user C cannot read either user's group data.
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and build; the database tests on Postgres 16; and the migrations plus seed on Supabase's own Postgres image with `supabase db lint`.

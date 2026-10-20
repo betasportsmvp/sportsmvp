@@ -9,7 +9,9 @@ import { balanceStanding } from "@/lib/balance";
 import { formatDate, localDate } from "@/lib/dates";
 import { getGroupContext } from "@/lib/groups";
 import { loadItems } from "@/lib/inventory";
+import { groupMessage, streakMessage, weeklyMessage } from "@/lib/motivation";
 import { formatMoney } from "@/lib/money";
+import { loadProgress } from "@/lib/progress";
 import { quantityLabel } from "@/lib/units";
 import { loadMyBalance } from "@/lib/settlement";
 import { getUser } from "@/lib/supabase/server";
@@ -31,10 +33,13 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
     return <p className="alert" role="alert">We couldn&apos;t load today&apos;s attendance. Please refresh the page.</p>;
   }
 
-  const [lowStock, balance] = await Promise.all([
+  const [lowStock, balance, progress] = await Promise.all([
     isAdmin ? loadItems(groupId).then((items) => items.filter((i) => i.low)).catch(() => []) : [],
     loadMyBalance(groupId, user.id),
+    loadProgress(groupId).catch(() => null),
   ]);
+  const myProgress = progress?.members.find((m) => m.user_id === user.id);
+  const streak = myProgress ? streakMessage(myProgress.week_streak) : null;
   const standing = balance === null ? null : balanceStanding(balance);
   const mine = records.find((r) => r.user_id === user.id);
   const myStatus = mine?.status ?? "none";
@@ -57,6 +62,19 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
         {note && <p className="muted small">{note}</p>}
         <AttendanceToggle groupId={groupId} date={today} userId={user.id} status={mine?.status ?? null} subject="your" />
       </section>
+
+      {progress && myProgress && (
+        <section className="stack" aria-label="Progress">
+          <p className="flush">
+            {weeklyMessage(myProgress.sessions_this_week, myProgress.weekly_target)}
+            {streak && <> {streak}</>}
+          </p>
+          <p className="muted small flush">
+            {groupMessage(progress.group.sessions_played, progress.group.monthly_target)}{" "}
+            <Link href={`/groups/${groupId}/progress`}>Progress</Link>
+          </p>
+        </section>
+      )}
 
       {lowStock.map((i) => (
         <p key={i.id} className="notice">

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getGroupPlan } from "@/lib/entitlements";
 import { getGroupContext } from "@/lib/groups";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { removeMember, revokeInvite, setMemberRole } from "../../actions";
@@ -14,6 +16,7 @@ export default async function MembersPage({ params }: PageProps<"/groups/[groupI
   if (!ctx) notFound();
   const { group, members, myRole, isAdmin: canManage } = ctx;
 
+  const plan = await getGroupPlan(groupId).catch(() => null);
   const supabase = await createClient();
   const { data: invites } = canManage
     ? await supabase
@@ -31,7 +34,14 @@ export default async function MembersPage({ params }: PageProps<"/groups/[groupI
         {group.sport} · {group.timezone} · {group.currency} · members can backdate {group.backdate_days} days
       </p>
 
-      <h2>Members ({members.length})</h2>
+      <p className="row actions">
+        <Link href={`/groups/${groupId}/progress`}>Progress and goals</Link>
+        <Link href={`/groups/${groupId}/plan`}>
+          Plan: {plan ? plan.label : "unavailable"}
+        </Link>
+      </p>
+
+      <h2>Members ({members.length}{plan?.member_limit ? ` of ${plan.member_limit}` : ""})</h2>
       <ul className="list card">
         {members.map((m) => (
           <li key={m.user_id} className="row">
