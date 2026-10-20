@@ -38,7 +38,7 @@ export default async function CostsPage({ params, searchParams }: PageProps<"/gr
 
   return (
     <>
-      <p><Link href={`/groups/${groupId}`}>← Today</Link></p>
+      <p><Link href={`/groups/${groupId}/settle`}>← Settle</Link></p>
       <h2>{whose} ball costs</h2>
 
       {isAdmin && (
@@ -60,8 +60,8 @@ export default async function CostsPage({ params, searchParams }: PageProps<"/gr
           Share of balls used so far: <strong className="stock">{money(costs.total)}</strong>
         </p>
         <p className="muted small flush">
-          This is only what {subject === user.id ? "you've" : "they've"} used. Purchases paid for and payments between
-          members will be counted when settling up arrives in a later update.
+          This is only {subject === user.id ? "your" : "their"} share of balls used. The full balance, including balls paid
+          for and payments, is on <Link href={`/groups/${groupId}/settle`}>Settle</Link>.
         </p>
       </section>
 

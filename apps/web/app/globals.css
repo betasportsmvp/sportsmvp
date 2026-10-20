@@ -111,7 +111,7 @@ h2.flush { margin: 0; }
 
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr);
   background: var(--surface); border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -174,3 +174,11 @@ input[type="file"] { padding: 8px; }
 p.flush { margin: 0; }
 ul.plain-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 ul.plain-list .row { gap: 8px; }
+
+/* Settle */
+.table-scroll { overflow-x: auto; padding: 0; }
+table.balances { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.balances th, table.balances td { padding: 8px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+table.balances th[scope="row"], table.balances thead th:first-child { text-align: left; }
+table.balances thead th { color: var(--muted); font-weight: 600; }
+table.balances tr:last-child > * { border-bottom: 0; }

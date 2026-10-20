@@ -9,8 +9,8 @@ The product spec and the phased build prompts live in [`docs/build-pack/`](docs/
 | 0 | Foundation: PWA shell, Google sign-in, groups, invites, schema, RLS | Done |
 | 1 | Attendance and calendar | Done |
 | 2 | Inventory | Done |
-| 3 | Consumption and allocation | In progress |
-| 4 | Settlement | Not started |
+| 3 | Consumption and allocation | Done |
+| 4 | Settlement | In progress |
 | 5 | Billing readiness and motivation | Not started |
 | 6 | Quality, security and beta release | Not started |
 
@@ -58,6 +58,7 @@ Google sign-in is off in `supabase/config.toml` by default so you can work witho
 | `alice@example.test` | Owner of "Sunday Doubles" |
 | `bob@example.test` | Not a member; join at `/join/local-dev-invite-token-not-secret` |
 | `carol@example.test` | Outsider; must not see the group |
+| `asha@example.test` | Owner of "Demo: Settle up" with Vikram, Neha and Rohan. Balances: Asha +800, Vikram −100, Neha −400, Rohan +200 |
 
 To try real Google sign-in locally, follow the comment above `[auth.external.google]` in `supabase/config.toml`.
 

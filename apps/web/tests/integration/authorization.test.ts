@@ -297,9 +297,12 @@ describe("seed data", () => {
     const seeded = await createTestDatabase({ seed: true });
     try {
       const { rows } = await seeded.client.query(
-        "select g.name, count(m.*)::int as members from public.groups g join public.memberships m on m.group_id = g.id group by g.name",
+        "select g.name, count(m.*)::int as members from public.groups g join public.memberships m on m.group_id = g.id group by g.name order by g.name",
       );
-      expect(rows).toEqual([{ name: "Sunday Doubles", members: 1 }]);
+      expect(rows).toEqual([
+        { name: "Demo: Settle up", members: 4 },
+        { name: "Sunday Doubles", members: 1 },
+      ]);
     } finally {
       await seeded.drop();
     }

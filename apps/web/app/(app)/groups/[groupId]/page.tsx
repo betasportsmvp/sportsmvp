@@ -5,12 +5,13 @@ import { AttendanceRoster, recordedNote } from "@/components/attendance-roster";
 import { AttendanceToggle } from "@/components/attendance-toggle";
 import { loadAttendance } from "@/lib/attendance";
 import { statusLabel, statusMark } from "@/lib/attendance-status";
-import { loadMemberCosts } from "@/lib/costs";
+import { balanceStanding } from "@/lib/balance";
 import { formatDate, localDate } from "@/lib/dates";
 import { getGroupContext } from "@/lib/groups";
 import { loadItems } from "@/lib/inventory";
 import { formatMoney } from "@/lib/money";
 import { quantityLabel } from "@/lib/units";
+import { loadMyBalance } from "@/lib/settlement";
 import { getUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Today" };
@@ -30,10 +31,11 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
     return <p className="alert" role="alert">We couldn&apos;t load today&apos;s attendance. Please refresh the page.</p>;
   }
 
-  const [lowStock, costs] = await Promise.all([
+  const [lowStock, balance] = await Promise.all([
     isAdmin ? loadItems(groupId).then((items) => items.filter((i) => i.low)).catch(() => []) : [],
-    loadMemberCosts(groupId, user.id).catch(() => null),
+    loadMyBalance(groupId, user.id),
   ]);
+  const standing = balance === null ? null : balanceStanding(balance);
   const mine = records.find((r) => r.user_id === user.id);
   const myStatus = mine?.status ?? "none";
   const names = new Map(members.map((m) => [m.user_id, m.name]));
@@ -68,10 +70,13 @@ export default async function TodayPage({ params }: PageProps<"/groups/[groupId]
       </p>
 
       <p className="row actions">
-        {costs && (
+        {standing && (
           <span>
-            Your ball costs so far: <strong>{formatMoney(costs.total, group.currency)}</strong>{" "}
-            <Link href={`/groups/${groupId}/costs`}>Why this cost?</Link>
+            {standing.kind === "owed" && <>You are owed <strong>{formatMoney(standing.amount, group.currency)}</strong></>}
+            {standing.kind === "owes" && <>You owe <strong>{formatMoney(standing.amount, group.currency)}</strong></>}
+            {standing.kind === "square" && <>You&apos;re all square</>}
+            {" · "}<Link href={`/groups/${groupId}/settle`}>Settle up</Link>
+            {" · "}<Link href={`/groups/${groupId}/costs`}>Why this cost?</Link>
           </span>
         )}
         {isAdmin && playing > 0 && (

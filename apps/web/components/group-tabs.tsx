@@ -10,6 +10,7 @@ export function GroupTabs({ groupId }: { groupId: string }) {
     { href: base, label: "Today" },
     { href: `${base}/calendar`, label: "Calendar" },
     { href: `${base}/balls`, label: "Balls" },
+    { href: `${base}/settle`, label: "Settle" },
     { href: `${base}/members`, label: "Group" },
   ];
   return (
